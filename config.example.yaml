@@ -1,0 +1,53 @@
+markets:
+  - name: 'bybit-btcusdt'
+    exchange_id: 'bybit'
+    exchange_type: 'spot'
+    symbol: 'BTC/USDT'
+    sandbox_mode: true
+
+    # replace with your own api key and secret
+    api_key: ""
+    api_secret: ""
+
+    # trend calculation strategy: moving_average, slope_close, slope_median, vwap
+    trend_strategy: 'moving_average'
+    reduce_ask_bid_strategy: "at_least_once"
+
+    # max number of candles to use
+    max_candles: 30
+
+    # the scaling factor to adjust the volatility
+    volatility_scaling_factor: 0.8
+    # the minimum profit in USD to make a trade
+    min_profit: 5
+
+    # the order size in % of the current balance
+    order_size: 1
+    # the minimum order size in USD (bigger orders will be chunked into smaller ones)
+    order_max_size_in_usd: 50
+    # the amount in usd between each slice of the order
+    order_size_slice_in_usd: 1
+    # order strategy
+    strategy: 'dynamic_order_size'
+    # the delay in seconds before retrying a failed order
+    retry_delay: 10
+    # the maximum number of retries before giving up
+    max_retries: 5
+    # the timeout in seconds for the order (the order will be canceled if not filled in time)
+    order_timeout: 90
+    # if false, the order will be canceled asap if not filled in time
+    apply_order_timeout: true
+    # if true, the bot will cancel the orders too far from the current price
+    cancel_orders_by_distance: true
+    # the max numbers of orders to keep open
+    max_orders: 10
+
+    # polling in seonds
+    polling: 10
+
+
+    
+    stop_loss_percentage: 0.5
+  
+  
+
