@@ -38,34 +38,61 @@ class AbstractTradingSystem:
     async def load_markets(self):
         raise NotImplementedError
     
+    def set_sandbox_mode(self, enable):
+        raise NotImplementedError
 
 class CCXTTrading(AbstractTradingSystem):
     def __init__(self, exchange, initial_balance):
         super().__init__(exchange, initial_balance)
 
     async def fetch_balance(self):
-        return await self.exchange.fetch_balance()
+        return await self.real_exchange.fetch_balance()
 
     async def create_limit_buy_order(self, symbol, amount, price):
-        return await self.exchange.create_limit_buy_order(symbol, amount, price)
+        return await self.real_exchange.create_limit_buy_order(symbol, amount, price)
 
     async def create_limit_sell_order(self, symbol, amount, price):
-        return await self.exchange.create_limit_sell_order(symbol, amount, price)
+        return await self.real_exchange.create_limit_sell_order(symbol, amount, price)
 
+    # async def fetch_open_orders(self, symbol=None):
+    #     return await self.real_exchange.fetch_open_orders(symbol)
     async def fetch_open_orders(self, symbol=None):
-        return await self.exchange.fetch_open_orders(symbol)
+        print(f"Fetching open orders for symbol={symbol}")
+        all_open_orders = []
+        since = None  # Starting point for fetching orders
+        limit = 100   # Max number of orders per request (if supported by the exchange)
 
+        while True:
+            open_orders = await self.real_exchange.fetch_open_orders(symbol=symbol, since=since, limit=limit)
+            if not open_orders:
+                break  # No more open orders to fetch
+
+            all_open_orders.extend(open_orders)
+            since = open_orders[-1]['timestamp'] + 1  # Update 'since' to the timestamp of the last fetched order
+
+            if len(open_orders) < limit:
+                break  # Fetched fewer than 'limit' orders, indicating the end of available orders
+
+        print(f"Total open orders fetched: {len(all_open_orders)}")
+        return all_open_orders
+    
     async def cancel_order(self, order_id, symbol):
-        return await self.exchange.cancel_order(order_id, symbol)
+        return await self.real_exchange.cancel_order(order_id, symbol)
 
     async def fetch_ohlcv(self, symbol, timeframe='1m', limit=2):
-        return await self.exchange.fetch_ohlcv(symbol, timeframe, limit=limit)
+        return await self.real_exchange.fetch_ohlcv(symbol, timeframe, limit=limit)
 
     async def fetch_ticker(self, symbol):
-        return await self.exchange.fetch_ticker(symbol)
+        return await self.real_exchange.fetch_ticker(symbol)
     
     async def load_markets(self):
         return await self.real_exchange.load_markets()
+    
+    def set_sandbox_mode(self, enable):
+        return  self.real_exchange.set_sandbox_mode(enable)
+
+    def enable_demo_trading(self, enable):
+        return  self.real_exchange.enable_demo_trading(enable)
 
 class PaperTrading(AbstractTradingSystem):
     def __init__(self, real_exchange, initial_balance):
@@ -167,6 +194,9 @@ class PaperTrading(AbstractTradingSystem):
             print(f"Order cancelled: {order}")
             print(f"Updated balances: {self.balances}")
             return order
+
+    def set_sandbox_mode(self, enable):
+        return self.real_exchange.set_sandbox_mode(enable)
 
     async def load_markets(self):
         print("Loading markets...")
